@@ -1,0 +1,33 @@
+{
+  "name": "playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "presetup": "npx playwright install chromium",
+    "setup": "cp .env.example .env && mkdir -p src/.auth && touch src/.auth/user.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/t0yger/playwright.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/t0yger/playwright/issues"
+  },
+  "homepage": "https://github.com/t0yger/playwright#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.0",
+    "@types/node": "^25.1.0",
+    "dotenv": "^17.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "inquirer": "^13.2.2",
+    "ora": "^9.1.0"
+  }
+}
