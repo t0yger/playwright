@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 /playwright/.cache/
 /playwright/.auth/
 src/.auth
+
+targetReserve.json
