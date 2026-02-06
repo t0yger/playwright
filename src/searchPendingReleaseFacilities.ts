@@ -13,11 +13,8 @@ const getPendingReleaseFacilities = async ({
   startTime,
   endTime,
   targetDayOfWeek,
-}: EnvInfo) => {
-  const browser = await chromium.launch({
-    headless: false,
-  });
-  const page = await browser.newPage();
+  page,
+}: EnvInfo & { page: Page }) => {
   await page.goto("https://www.shisetsu.city.yokohama.lg.jp/user/Home");
   await page
     .getByRole("tab", { name: "日時から探す （抽選申込は除く）" })
@@ -75,9 +72,13 @@ async function main() {
   try {
     const envInfo = getEnvInfo();
     const spinner = ora(
-      `以下の期間で開放待ちの施設情報を取得中...\n日付: ${envInfo.startDate}~${envInfo.endDate}\n時刻: ${envInfo.startTime}~${envInfo.endTime}`
+      `以下の期間で開放待ちの施設情報を取得中...\n日付: ${envInfo.startDate}~${envInfo.endDate}\n時刻: ${envInfo.startTime}~${envInfo.endTime}`,
     ).start();
-    const results = await getPendingReleaseFacilities(envInfo);
+    const browser = await chromium.launch({
+      headless: false,
+    });
+    const page = await browser.newPage();
+    const results = await getPendingReleaseFacilities({ ...envInfo, page });
     const choices = results.map((val, index) => {
       return {
         index: index,
@@ -86,8 +87,12 @@ async function main() {
     });
     if (choices.length === 0) {
       spinner.fail("指定の期間では開放待ちの施設はありませんでした");
+      await page.close();
+      await browser.close();
       process.exit(0);
     } else {
+      await page.close();
+      await browser.close();
       spinner.succeed("取得完了");
     }
     const answer = await inquirer.prompt([
@@ -102,15 +107,15 @@ async function main() {
 
     console.log(answer["search result"]);
     const selectIndex: number = choices.filter(
-      (val) => val.message === answer["search result"][0]
+      (val) => val.message === answer["search result"][0],
     )[0].index;
     await fs.writeFile(
       path.join(dirname, "targetReserve.json"),
-      JSON.stringify(results[selectIndex])
+      JSON.stringify(results[selectIndex]),
     );
     process.exit(0);
   } catch (error) {
-    console.log(error.message);
+    console.log((error as Error)?.message);
     process.exit(0);
   }
 }
