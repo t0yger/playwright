@@ -28,7 +28,7 @@ const answer = await inquirer.prompt([
 const users = Number(answer.count);
 
 type ReserveArg = RowInfo & EnvInfo;
-var spinner = ora("6:55になったら認証を行いCookie情報を保存します...").start();
+var spinner = ora("6:59になったら認証を行い検索画面で待機します...").start();
 var browser: Browser;
 var page: Page;
 
@@ -123,11 +123,12 @@ const getRowInfo = async (): Promise<RowInfo> => {
   return JSON.parse(data.toString());
 };
 
-// 認証
+// 認証を通し直前の画面で待機
 cron.schedule(
-  `55 6 * * *`,
+  `59 6 * * *`,
   async () => {
     try {
+      const rowInfo = await getRowInfo();
       const envInfo = getEnvInfo();
       browser = await chromium.launch({
         headless: false,
@@ -139,30 +140,7 @@ cron.schedule(
         page,
       });
       await page.close();
-      await browser.close();
-      spinner.succeed("認証が完了しました。");
-      spinner = ora("6:59になったら直前の画面で待機します...").start();
-    } catch (error) {
-      spinner.fail("認証が失敗しました");
-      console.log((error as Error)?.message);
-      process.exit(0);
-    }
-  },
-  {
-    timezone: "Asia/Tokyo",
-  },
-);
-
-// 直前の画面で待機
-cron.schedule(
-  `59 6 * * *`,
-  async () => {
-    try {
-      const rowInfo = await getRowInfo();
-      const envInfo = getEnvInfo();
-      browser = await chromium.launch({
-        headless: false,
-      });
+      spinner.succeed("認証が完了しました。続いて検索直前で待機します");
       page = await browser.newPage({
         storageState: authFile,
       });

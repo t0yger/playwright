@@ -81,8 +81,8 @@ async function main() {
     const results = await getPendingReleaseFacilities({ ...envInfo, page });
     const choices = results.map((val, index) => {
       return {
-        index: index,
-        message: `施設: ${val.facility} ${val.room}\n日付: ${val.date} ${val.time}\n開放時間: ${val.releaseDate}`,
+        value: index,
+        name: `施設: ${val.facility} ${val.room}\n日付: ${val.date} ${val.time}\n開放時間: ${val.releaseDate}`,
       };
     });
     if (choices.length === 0) {
@@ -101,18 +101,18 @@ async function main() {
         name: "search result",
         message: "開放予定の施設は以下です。1つだけ選択してください",
         loop: false,
-        choices: choices.map((val) => val.message),
+        choices: choices,
       },
     ]);
 
-    console.log("施設情報を保存しました");
-    const selectIndex: number = choices.filter(
-      (val) => val.message === answer["search result"][0],
-    )[0].index;
+    const choiceResult = choices.filter(
+      (val) => val.value === answer["search result"][0],
+    )[0];
     await fs.writeFile(
       path.join(dirname, "targetReserve.json"),
-      JSON.stringify(results[selectIndex]),
+      JSON.stringify(results[choiceResult.value]),
     );
+    console.log("施設情報を保存しました");
     process.exit(0);
   } catch (error) {
     console.log((error as Error)?.message);
