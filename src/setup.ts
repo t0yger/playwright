@@ -1,25 +1,21 @@
-import test from "@playwright/test";
-import path from 'path';
-import fs from "node:fs";
+import { promises as fs } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const authFile = path.join(path.resolve(__dirname), ".auth/user.json")
-fs.writeFileSync(authFile, JSON.stringify({}))
+async function ensureUserFile() {
+  const authDirPath = path.resolve(__dirname, ".auth");
+  const authFilePath = path.join(authDirPath, "user.json");
+  const targetReserveJsonFilePath = path.join(__dirname, "targetReserve.json");
 
-test("auth", async ({ page }) => {
-  await page.goto("/user/Login");
+  // ディレクトリが無ければ作成
+  await fs.mkdir(authDirPath, { recursive: true });
 
-  await page.getByRole('textbox', { name: '利用者ID' }).click();
-  await page.getByRole('textbox', { name: '利用者ID' }).fill(process.env.USER_ID ?? "");
-  console.log(process.env.USER_ID)
-  await page.getByRole('textbox', { name: 'パスワード' }).click();
-  await page.getByRole('textbox', { name: 'パスワード' }).fill(process.env.PASSWORD ?? "");
+  // ファイルが無ければ作成
+  await fs.writeFile(authFilePath, "{}", { encoding: "utf-8" });
+  await fs.writeFile(targetReserveJsonFilePath, "{}", { encoding: "utf-8" });
+}
 
-  await page.getByRole('button', { name: 'ログイン' }).click();
-  
-  await page.waitForTimeout(2000)
-
-  await page.context().storageState({ path: authFile })
-  await page.close();
-
-})
+ensureUserFile();

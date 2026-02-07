@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "presetup": "npx playwright install chromium",
-    "setup": "cp .env.example .env && mkdir -p src/.auth && touch src/.auth/user.json"
+    "setup": "npx tsx src/setup.ts",
+    "presearch": "npm run setup",
+    "search": "npx tsx src/searchPendingReleaseFacilities.ts",
+    "reserve": "npx tsx src/reserve.ts"
   },
   "repository": {
     "type": "git",
@@ -28,6 +31,7 @@
   },
   "dependencies": {
     "inquirer": "^13.2.2",
+    "node-cron": "^4.2.1",
     "ora": "^9.1.0"
   }
 }
