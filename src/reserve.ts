@@ -31,8 +31,8 @@ type ReserveArg = RowInfo & EnvInfo;
 var spinner = ora("6:55になったら認証を行いCookie情報を保存します...").start();
 var browser: Browser;
 var page: Page;
-const START_RESERVE_HOUR = 15;
-const START_RESERVE_MINUTE = 16;
+const START_RESERVE_HOUR = 17;
+const START_RESERVE_MINUTE = 49;
 
 const prepare = async ({
   startDate,
