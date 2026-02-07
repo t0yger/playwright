@@ -31,8 +31,6 @@ type ReserveArg = RowInfo & EnvInfo;
 var spinner = ora("6:55になったら認証を行いCookie情報を保存します...").start();
 var browser: Browser;
 var page: Page;
-const START_RESERVE_HOUR = 17;
-const START_RESERVE_MINUTE = 49;
 
 const prepare = async ({
   startDate,
@@ -79,7 +77,6 @@ const reserve = async ({
     .locator("button.btn-primary")
     .filter({ hasText: "次へ進む" })
     .click();
-  console.log(formatTimeRange(time));
   await page
     .getByText(formatTimeRange(time))
     .locator("xpath=ancestor::label")
@@ -126,8 +123,9 @@ const getRowInfo = async (): Promise<RowInfo> => {
   return JSON.parse(data.toString());
 };
 
+// 認証
 cron.schedule(
-  `${START_RESERVE_MINUTE - 2} ${START_RESERVE_HOUR} * * *`,
+  `55 6 * * *`,
   async () => {
     try {
       const envInfo = getEnvInfo();
@@ -157,7 +155,7 @@ cron.schedule(
 
 // 直前の画面で待機
 cron.schedule(
-  `${START_RESERVE_MINUTE - 1} ${START_RESERVE_HOUR} * * *`,
+  `59 6 * * *`,
   async () => {
     try {
       const rowInfo = await getRowInfo();
@@ -184,8 +182,9 @@ cron.schedule(
   },
 );
 
+// 予約実行
 cron.schedule(
-  `${START_RESERVE_MINUTE} ${START_RESERVE_HOUR} * * *`,
+  `0 7 * * *`,
   async () => {
     try {
       const rowInfo = await getRowInfo();

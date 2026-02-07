@@ -105,7 +105,7 @@ async function main() {
       },
     ]);
 
-    console.log(answer["search result"]);
+    console.log("施設情報を保存しました");
     const selectIndex: number = choices.filter(
       (val) => val.message === answer["search result"][0],
     )[0].index;
