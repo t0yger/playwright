@@ -8,24 +8,19 @@ import cron from "node-cron";
 import { authFile, setupAuth } from "./setupAuth";
 import ora from "ora";
 
-type ReserveArg = RowInfo & EnvInfo & { page: Page };
+type ReserveArg = RowInfo & EnvInfo;
 var spinner = ora("6:55になったら認証を行いCookie情報を保存します...").start();
 var browser: Browser;
 var page: Page;
-const START_RESERVE_HOUR = 5;
-const START_RESERVE_MINUTE = 25;
+const START_RESERVE_HOUR = 12;
+const START_RESERVE_MINUTE = 48;
 
 const prepare = async ({
-  facility,
-  room,
-  date,
-  time,
   startDate,
   endDate,
   startTime,
   endTime,
   targetDayOfWeek,
-  page,
 }: ReserveArg) => {
   await page.goto("https://www.shisetsu.city.yokohama.lg.jp/user/Home");
   await page
@@ -45,7 +40,7 @@ const prepare = async ({
   await page.getByText("空きコマ").click();
 };
 
-const reserve = async ({ facility, room, date, time, page }: ReserveArg) => {
+const reserve = async ({ facility, room, date, time }: ReserveArg) => {
   await page.getByRole("button", { name: "検索" }).click();
   await page
     .getByRole("row", {
@@ -53,28 +48,46 @@ const reserve = async ({ facility, room, date, time, page }: ReserveArg) => {
     })
     .locator("label")
     .click();
-  await page.getByRole("button", { name: "次へ進む" }).click();
-  await page.getByText(formatTimeRange(time)).click();
-  await page.getByRole("button", { name: "次へ進む" }).click();
+  await page
+    .locator("button.btn-primary")
+    .filter({ hasText: "次へ進む" })
+    .click();
+  console.log(formatTimeRange(time));
+  await page
+    .getByText(formatTimeRange(time))
+    .locator("xpath=ancestor::label")
+    .click();
+  await page
+    .locator("button.btn-primary")
+    .filter({ hasText: "次へ進む" })
+    .click();
 };
 
 function formatTimeRange(input: string): string {
-  const match = input.match(/^(\d{2}):(\d{2})～(\d{2}):(\d{2})$/);
+  const match = input.match(/^(\d{1,2}):(\d{2})～(\d{1,2}):(\d{2})$/);
 
   if (!match) {
     throw new Error("Invalid time format");
   }
 
-  const [, startHour, startMin, endHour, endMin] = match;
+  const [, startHourStr, startMin, endHourStr, endMin] = match;
 
-  // 分が 00 以外ならエラーにしたい場合はここでチェック
-  // if (startMin !== '00' || endMin !== '00') {
-  //   throw new Error('Minutes must be 00');
-  // }
+  const startHour = Number(startHourStr);
+  const endHour = Number(endHourStr);
 
-  const normalizeHour = (h: string) => Number(h).toString();
+  // バリデーション（必要なら）
+  if (
+    startHour < 0 ||
+    startHour > 24 ||
+    endHour < 0 ||
+    endHour > 24 ||
+    startMin !== "00" ||
+    endMin !== "00"
+  ) {
+    throw new Error("Invalid time value");
+  }
 
-  return `${normalizeHour(startHour)}時から${normalizeHour(endHour)}時まで`;
+  return `${startHour}時から${endHour}時まで`;
 }
 
 const getRowInfo = async (): Promise<RowInfo> => {
@@ -125,7 +138,7 @@ cron.schedule(
       page = await browser.newPage({
         storageState: authFile,
       });
-      await prepare({ ...rowInfo, ...envInfo, page });
+      await prepare({ ...rowInfo, ...envInfo });
       spinner.succeed("準備完了");
       spinner = ora("7:00になったら予約を開始します...").start();
     } catch (error) {
@@ -147,7 +160,7 @@ cron.schedule(
     try {
       const rowInfo = await getRowInfo();
       const envInfo = getEnvInfo();
-      await reserve({ ...rowInfo, ...envInfo, page });
+      await reserve({ ...rowInfo, ...envInfo });
     } catch (error) {
       console.log((error as Error)?.message);
       process.exit(0);
