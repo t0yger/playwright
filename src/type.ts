@@ -6,6 +6,9 @@ export type EnvInfo = {
   startTime: string;
   endTime: string;
   targetDayOfWeek: string[];
+  purpose: string;
+  isNoisy: boolean;
+  isSurroundNoisy: boolean;
 };
 
 export type RowInfo = {

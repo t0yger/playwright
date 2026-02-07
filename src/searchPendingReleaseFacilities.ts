@@ -99,7 +99,7 @@ async function main() {
       {
         type: "checkbox",
         name: "search result",
-        message: "本日7時から解放される施設は以下です。1つだけ選択してください",
+        message: "開放予定の施設は以下です。1つだけ選択してください",
         loop: false,
         choices: choices.map((val) => val.message),
       },

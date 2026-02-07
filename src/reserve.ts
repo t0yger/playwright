@@ -7,13 +7,32 @@ import { getEnvInfo } from "./env";
 import cron from "node-cron";
 import { authFile, setupAuth } from "./setupAuth";
 import ora from "ora";
+import { Facility, getFormType, inputForm } from "./form";
+import inquirer from "inquirer";
+
+const answer = await inquirer.prompt([
+  {
+    type: "input",
+    name: "count",
+    message: "今回の利用人数を入力してください",
+    validate: (input) => {
+      const value = Number(input);
+      if (Number.isNaN(value)) {
+        return "数値を入力してください";
+      }
+      return true;
+    },
+  },
+]);
+
+const users = Number(answer.count);
 
 type ReserveArg = RowInfo & EnvInfo;
 var spinner = ora("6:55になったら認証を行いCookie情報を保存します...").start();
 var browser: Browser;
 var page: Page;
-const START_RESERVE_HOUR = 12;
-const START_RESERVE_MINUTE = 48;
+const START_RESERVE_HOUR = 15;
+const START_RESERVE_MINUTE = 16;
 
 const prepare = async ({
   startDate,
@@ -40,7 +59,15 @@ const prepare = async ({
   await page.getByText("空きコマ").click();
 };
 
-const reserve = async ({ facility, room, date, time }: ReserveArg) => {
+const reserve = async ({
+  facility,
+  room,
+  date,
+  time,
+  purpose,
+  isNoisy,
+  isSurroundNoisy,
+}: ReserveArg) => {
   await page.getByRole("button", { name: "検索" }).click();
   await page
     .getByRole("row", {
@@ -61,6 +88,9 @@ const reserve = async ({ facility, room, date, time }: ReserveArg) => {
     .locator("button.btn-primary")
     .filter({ hasText: "次へ進む" })
     .click();
+
+  const formType = getFormType(facility as Facility);
+  await inputForm(page, formType, { purpose, users, isNoisy, isSurroundNoisy });
 };
 
 function formatTimeRange(input: string): string {
@@ -97,7 +127,7 @@ const getRowInfo = async (): Promise<RowInfo> => {
 };
 
 cron.schedule(
-  `${START_RESERVE_MINUTE - 5} ${START_RESERVE_HOUR} * * *`,
+  `${START_RESERVE_MINUTE - 2} ${START_RESERVE_HOUR} * * *`,
   async () => {
     try {
       const envInfo = getEnvInfo();
