@@ -88,6 +88,8 @@ const reserve = async ({
 
   const formType = getFormType(facility as Facility);
   await inputForm(page, formType, { purpose, users, isNoisy, isSurroundNoisy });
+
+  await page.locator("button.btn-primary").filter({ hasText: "申込" }).click();
 };
 
 function formatTimeRange(input: string): string {
